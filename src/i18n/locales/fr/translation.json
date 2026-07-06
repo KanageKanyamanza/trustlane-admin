@@ -1,0 +1,83 @@
+{
+  "nav": {
+    "dashboard": "Tableau de bord",
+    "organizations": "Organisations",
+    "users": "Utilisateurs",
+    "documents": "Documents",
+    "trustScores": "Trust Scores",
+    "compliance": "Conformité",
+    "auditLogs": "Journaux d'audit",
+    "alerts": "Alertes",
+    "system": "Système",
+    "admins": "Admins"
+  },
+  "auth": {
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "email": "Email",
+    "password": "Mot de passe",
+    "loginButton": "Se connecter",
+    "loginTitle": "Panel Administrateur",
+    "loginSubtitle": "Connectez-vous à votre compte admin",
+    "invalidCredentials": "Email ou mot de passe incorrect"
+  },
+  "common": {
+    "loading": "Chargement...",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "confirm": "Confirmer",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "actions": "Actions",
+    "status": "Statut",
+    "createdAt": "Créé le",
+    "total": "Total",
+    "active": "Actif",
+    "suspended": "Suspendu",
+    "yes": "Oui",
+    "no": "Non"
+  },
+  "orgs": {
+    "title": "Organisations",
+    "name": "Nom",
+    "owner": "Propriétaire",
+    "trustScore": "Trust Score",
+    "suspend": "Suspendre",
+    "reactivate": "Réactiver",
+    "delete": "Supprimer l'organisation"
+  },
+  "users": {
+    "title": "Utilisateurs",
+    "name": "Nom",
+    "role": "Rôle",
+    "organization": "Organisation",
+    "block": "Bloquer",
+    "unblock": "Débloquer",
+    "resetPassword": "Réinitialiser le mot de passe"
+  },
+  "documents": {
+    "title": "Révision des documents",
+    "type": "Type",
+    "verify": "Vérifier",
+    "reject": "Rejeter",
+    "reason": "Motif de rejet",
+    "pending": "En attente",
+    "verified": "Vérifié",
+    "rejected": "Rejeté"
+  },
+  "trust": {
+    "title": "Trust Scores",
+    "score": "Score",
+    "override": "Override manuel",
+    "recalculate": "Recalculer",
+    "history": "Historique"
+  },
+  "system": {
+    "title": "Système",
+    "health": "Santé",
+    "redis": "Redis",
+    "crons": "Cron Jobs",
+    "flushCache": "Vider le cache"
+  }
+}

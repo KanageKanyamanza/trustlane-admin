@@ -1,0 +1,83 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "organizations": "Organizations",
+    "users": "Users",
+    "documents": "Documents",
+    "trustScores": "Trust Scores",
+    "compliance": "Compliance",
+    "auditLogs": "Audit Logs",
+    "alerts": "Alerts",
+    "system": "System",
+    "admins": "Admins"
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "loginButton": "Sign in",
+    "loginTitle": "Admin Panel",
+    "loginSubtitle": "Sign in to your admin account",
+    "invalidCredentials": "Invalid email or password"
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "search": "Search",
+    "filter": "Filter",
+    "actions": "Actions",
+    "status": "Status",
+    "createdAt": "Created at",
+    "total": "Total",
+    "active": "Active",
+    "suspended": "Suspended",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "orgs": {
+    "title": "Organizations",
+    "name": "Name",
+    "owner": "Owner",
+    "trustScore": "Trust Score",
+    "suspend": "Suspend",
+    "reactivate": "Reactivate",
+    "delete": "Delete organization"
+  },
+  "users": {
+    "title": "Users",
+    "name": "Name",
+    "role": "Role",
+    "organization": "Organization",
+    "block": "Block",
+    "unblock": "Unblock",
+    "resetPassword": "Reset password"
+  },
+  "documents": {
+    "title": "Document Review",
+    "type": "Type",
+    "verify": "Verify",
+    "reject": "Reject",
+    "reason": "Rejection reason",
+    "pending": "Pending",
+    "verified": "Verified",
+    "rejected": "Rejected"
+  },
+  "trust": {
+    "title": "Trust Scores",
+    "score": "Score",
+    "override": "Manual override",
+    "recalculate": "Recalculate",
+    "history": "History"
+  },
+  "system": {
+    "title": "System",
+    "health": "Health",
+    "redis": "Redis",
+    "crons": "Cron Jobs",
+    "flushCache": "Flush cache"
+  }
+}
