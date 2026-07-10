@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CheckCircle, XCircle } from 'lucide-react'
-import { useListDocumentsQuery, useVerifyDocumentMutation, useRejectDocumentMutation } from '../api/adminDocumentsApi'
+import { CheckCircle, XCircle, Eye, ExternalLink, X } from 'lucide-react'
+import { useListDocumentsQuery, useVerifyDocumentMutation, useRejectDocumentMutation, type AdminDocument } from '../api/adminDocumentsApi'
 
 export default function DocumentReviewPage() {
   const { t } = useTranslation()
   const [rejectId, setRejectId] = useState<string | null>(null)
+  const [previewDoc, setPreviewDoc] = useState<AdminDocument | null>(null)
   const [reason, setReason] = useState('')
   const { data, isLoading } = useListDocumentsQuery({ status: 'SUBMITTED' })
   const [verify] = useVerifyDocumentMutation()
@@ -44,6 +45,11 @@ export default function DocumentReviewPage() {
                 <td className="px-4 py-3 text-slate-500">{new Date(doc.createdAt).toLocaleDateString('fr-FR')}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
+                    <button onClick={() => setPreviewDoc(doc)}
+                      className="flex items-center gap-1 px-2.5 py-1 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg text-xs font-medium transition-colors"
+                      title="Prévisualiser le document">
+                      <Eye size={13} /> {t('common.preview') || 'Visualiser'}
+                    </button>
                     <button onClick={() => verify(doc.id)}
                       className="flex items-center gap-1 px-2.5 py-1 bg-green-100 text-green-700 hover:bg-green-200 rounded-lg text-xs font-medium transition-colors">
                       <CheckCircle size={13} /> {t('documents.verify')}
@@ -77,6 +83,103 @@ export default function DocumentReviewPage() {
           </div>
         </div>
       )}
+
+    {/* Preview modal */}
+    {previewDoc && (
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl w-full max-w-4xl h-[90vh] flex flex-col overflow-hidden shadow-2xl border border-slate-100">
+          {/* Modal Header */}
+          <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50 shrink-0">
+            <div>
+              <h3 className="font-bold text-slate-900 text-lg">{previewDoc.name}</h3>
+              <p className="text-slate-500 text-xs mt-0.5">
+                Organisation: <span className="font-medium text-slate-700">{previewDoc.org.name}</span> · Type: <span className="font-mono bg-slate-200 text-slate-800 px-1.5 py-0.5 rounded text-[10px]">{previewDoc.type}</span>
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <a
+                href={`/api/admin/documents/${previewDoc.id}/download?download=true`}
+                download
+                className="flex items-center gap-1.5 text-xs text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-medium px-3 py-2 rounded-lg border border-slate-200 transition-colors bg-white shadow-sm"
+              >
+                <ExternalLink size={14} />
+                Télécharger
+              </a>
+              <button onClick={() => setPreviewDoc(null)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-lg transition-colors">
+                <X size={18} />
+              </button>
+            </div>
+          </div>
+
+          {/* Modal Body (Preview content) */}
+          <div className="flex-1 bg-slate-100 p-6 overflow-hidden flex items-center justify-center">
+            {(() => {
+              const fileName = previewDoc.versions?.[0]?.fileName || previewDoc.name || ''
+              const isImage = /\.(png|jpe?g|gif|webp)$/i.test(fileName)
+              const isPdf = /\.pdf$/i.test(fileName)
+
+              const src = `/api/admin/documents/${previewDoc.id}/download`
+
+              if (isPdf) {
+                return (
+                  <iframe
+                    src={src}
+                    className="w-full h-full rounded-lg border border-slate-200 shadow-inner bg-white"
+                    title={previewDoc.name}
+                  />
+                )
+              } else if (isImage) {
+                return (
+                  <div className="w-full h-full flex items-center justify-center overflow-auto">
+                    <img
+                      src={src}
+                      alt={previewDoc.name}
+                      className="max-w-full max-h-full object-contain rounded-lg shadow-md bg-white"
+                    />
+                  </div>
+                )
+              } else {
+                return (
+                  <div className="text-center p-8 bg-white rounded-2xl shadow border max-w-sm">
+                    <p className="text-slate-600 text-sm font-medium mb-3">La prévisualisation de ce type de fichier n'est pas supportée dans le navigateur.</p>
+                    <a
+                      href={`${src}?download=true`}
+                      download
+                      className="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold px-4 py-2 rounded-xl text-sm transition-colors"
+                    >
+                      Télécharger pour l'ouvrir
+                    </a>
+                  </div>
+                )
+              }
+            })()}
+          </div>
+
+          {/* Modal Footer (Quick actions) */}
+          <div className="px-6 py-4 border-t border-slate-200 flex justify-end gap-3 bg-slate-50 shrink-0">
+            <button
+              onClick={() => {
+                verify(previewDoc.id)
+                setPreviewDoc(null)
+              }}
+              className="flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-medium transition-colors shadow-sm"
+            >
+              <CheckCircle size={15} /> Valider
+            </button>
+            <button
+              onClick={() => {
+                setRejectId(previewDoc.id)
+                setPreviewDoc(null)
+              }}
+              className="flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-medium transition-colors shadow-sm"
+            >
+              <XCircle size={15} /> Rejeter
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   )
 }
