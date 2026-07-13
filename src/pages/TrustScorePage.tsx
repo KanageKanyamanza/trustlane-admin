@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { SlidersHorizontal, RefreshCw, History, TrendingUp, X, CheckCircle } from 'lucide-react'
+import { SlidersHorizontal, RefreshCw, History, TrendingUp, X } from 'lucide-react'
 import {
   useListTrustScoresQuery,
   useOverrideTrustScoreMutation,
@@ -188,7 +188,7 @@ interface HistoryModalProps {
 function HistoryModal({ org, onClose, getGrade, gradeColor }: HistoryModalProps) {
   const { data: history, isLoading } = useGetTrustHistoryQuery(org.id)
 
-  const sortedHistory = [...(history ?? [])].sort(
+  const sortedHistory: TrustScoreEntry[] = [...(history ?? [])].sort(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   )
 
