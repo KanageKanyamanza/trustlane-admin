@@ -46,10 +46,10 @@ export default function DashboardPage() {
 
       {/* Alerte critique */}
       {(overview?.criticalAlerts ?? 0) > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
-          <AlertTriangle size={18} className="text-red-500 shrink-0" />
-          <p className="text-red-700 text-sm font-medium">
-            {overview?.criticalAlerts} alerte(s) CRITICAL non acquittée(s) — vérifiez la page Alertes
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-center gap-3">
+          <AlertTriangle size={18} className="text-amber-500 shrink-0" />
+          <p className="text-amber-800 text-sm font-medium">
+            {overview?.criticalAlerts} alerte{(overview?.criticalAlerts ?? 0) > 1 ? 's' : ''} en attente de traitement — <a href="/alerts" className="underline hover:no-underline">voir les alertes</a>
           </p>
         </div>
       )}
