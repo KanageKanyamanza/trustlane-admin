@@ -1,8 +1,19 @@
 import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, ShieldOff, ShieldCheck, Trash2, Users, FileText, Clock, ShieldAlert } from 'lucide-react'
-import { useGetOrgQuery, useSuspendOrgMutation, useDeleteOrgMutation, useGetOrgAuditLogsQuery } from '../api/adminOrgsApi'
+import {
+  ArrowLeft, ShieldOff, ShieldCheck, Trash2, Users, FileText, Clock, ShieldAlert,
+  Wallet, ArrowDownCircle, ArrowUpCircle, Building2, HandCoins, Repeat, ListTree,
+} from 'lucide-react'
+import {
+  useGetOrgQuery, useSuspendOrgMutation, useDeleteOrgMutation, useGetOrgAuditLogsQuery,
+  useGetOrgTransactionsQuery,
+} from '../api/adminOrgsApi'
 import { useAdminAuth } from '../context/AdminAuthContext'
+
+function formatMoney(amount: number | string, currency: string) {
+  const value = typeof amount === 'string' ? Number(amount) : amount
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency, maximumFractionDigits: 0 }).format(value)
+}
 
 export default function OrgDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -14,6 +25,8 @@ export default function OrgDetailPage() {
   const [deleteOrg, { isLoading: deleting }] = useDeleteOrgMutation()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleteError, setDeleteError] = useState('')
+  const [txnPage, setTxnPage] = useState(1)
+  const { data: txns, isLoading: txnsLoading } = useGetOrgTransactionsQuery({ id: id!, page: txnPage })
 
   if (isLoading) return (
     <div className="p-6 space-y-4">
@@ -31,6 +44,9 @@ export default function OrgDetailPage() {
       setDeleteError("Échec de la suppression. Réessayez ou contactez le support si le problème persiste.")
     }
   }
+
+  const totalBalance = org.accounts.reduce((sum, a) => sum + Number(a.balance), 0)
+  const mainCurrency = org.accounts[0]?.currency ?? 'XAF'
 
   return (
     <div className="p-6 space-y-6">
@@ -98,8 +114,9 @@ export default function OrgDetailPage() {
       )}
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
         {[
+          { label: 'Solde total', value: formatMoney(totalBalance, mainCurrency), icon: Wallet, color: 'text-emerald-600', bg: 'bg-emerald-50' },
           { label: 'Utilisateurs', value: org._count.users, icon: Users, color: 'text-blue-500', bg: 'bg-blue-50' },
           { label: 'Documents', value: org._count.documents, icon: FileText, color: 'text-amber-500', bg: 'bg-amber-50' },
           { label: 'Trust Score', value: org.trustScore ? `${org.trustScore.score}/100` : '—', icon: ShieldAlert, color: 'text-green-500', bg: 'bg-green-50' },
@@ -112,9 +129,75 @@ export default function OrgDetailPage() {
                 <Icon size={15} className={color} />
               </div>
             </div>
-            <p className="text-xl font-bold text-slate-900">{value}</p>
+            <p className="text-xl font-bold text-slate-900 truncate">{value}</p>
           </div>
         ))}
+      </div>
+
+      {/* Comptes */}
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+          <Wallet size={15} className="text-slate-400" />
+          <h2 className="font-semibold text-slate-900 text-sm">Comptes</h2>
+        </div>
+        <div className="divide-y divide-slate-100">
+          {org.accounts.length === 0 && (
+            <p className="px-5 py-4 text-slate-400 text-sm">Aucun compte</p>
+          )}
+          {org.accounts.map((a) => (
+            <div key={a.id} className="px-5 py-3 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-900">{a.name}</p>
+                <p className="text-xs text-slate-400">{a.type}</p>
+              </div>
+              <p className="text-sm font-semibold text-slate-900">{formatMoney(a.balance, a.currency)}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Transactions */}
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ListTree size={15} className="text-slate-400" />
+            <h2 className="font-semibold text-slate-900 text-sm">Transactions</h2>
+          </div>
+          <span className="text-slate-400 text-xs">{org._count.transactions} au total</span>
+        </div>
+        <div className="divide-y divide-slate-100">
+          {txnsLoading && <p className="px-5 py-4 text-slate-400 text-sm">Chargement...</p>}
+          {!txnsLoading && txns?.data.length === 0 && (
+            <p className="px-5 py-4 text-slate-400 text-sm">Aucune transaction</p>
+          )}
+          {txns?.data.map((t) => (
+            <div key={t.id} className="px-5 py-3 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                {t.direction === 'IN'
+                  ? <ArrowDownCircle size={16} className="text-green-500 shrink-0" />
+                  : <ArrowUpCircle size={16} className="text-red-500 shrink-0" />}
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-slate-900 truncate">{t.counterparty || t.category}</p>
+                  <p className="text-xs text-slate-400">
+                    {t.account.name} · {new Date(t.occurredAt).toLocaleDateString('fr-FR')} · {t.category}
+                  </p>
+                </div>
+              </div>
+              <p className={`text-sm font-semibold shrink-0 ${t.direction === 'IN' ? 'text-green-600' : 'text-red-600'}`}>
+                {t.direction === 'IN' ? '+' : '-'}{formatMoney(t.amount, t.currency)}
+              </p>
+            </div>
+          ))}
+        </div>
+        {txns && txns.total > txns.pageSize && (
+          <div className="flex justify-center gap-2 py-3 border-t border-slate-100">
+            <button onClick={() => setTxnPage((p) => Math.max(1, p - 1))} disabled={txnPage === 1}
+              className="px-3 py-1 text-xs border rounded-lg disabled:opacity-40 hover:bg-slate-50">Précédent</button>
+            <span className="px-3 py-1 text-xs text-slate-500">Page {txnPage}</span>
+            <button onClick={() => setTxnPage((p) => p + 1)} disabled={(txns.data.length) < txns.pageSize}
+              className="px-3 py-1 text-xs border rounded-lg disabled:opacity-40 hover:bg-slate-50">Suivant</button>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -161,6 +244,105 @@ export default function OrgDetailPage() {
                   d.status === 'REJECTED' ? 'bg-red-100 text-red-700' :
                   'bg-amber-100 text-amber-700'
                 }`}>{d.status}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Profil SME + Bénéficiaires effectifs */}
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+          <Building2 size={15} className="text-slate-400" />
+          <h2 className="font-semibold text-slate-900 text-sm">Profil entreprise (KYC)</h2>
+        </div>
+        {!org.smeProfile ? (
+          <p className="px-5 py-4 text-slate-400 text-sm">Aucun profil renseigné</p>
+        ) : (
+          <div className="p-5 space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div><p className="text-slate-400 text-xs mb-0.5">Raison sociale</p><p className="text-slate-900 font-medium">{org.smeProfile.legalName}</p></div>
+              <div><p className="text-slate-400 text-xs mb-0.5">RCCM</p><p className="text-slate-900 font-medium">{org.smeProfile.registrationNo ?? '—'}</p></div>
+              <div><p className="text-slate-400 text-xs mb-0.5">NIU / Tax ID</p><p className="text-slate-900 font-medium">{org.smeProfile.taxId ?? '—'}</p></div>
+              <div><p className="text-slate-400 text-xs mb-0.5">Secteur</p><p className="text-slate-900 font-medium">{org.smeProfile.industry ?? '—'}</p></div>
+              <div><p className="text-slate-400 text-xs mb-0.5">Pays</p><p className="text-slate-900 font-medium">{org.smeProfile.country ?? '—'}</p></div>
+              <div><p className="text-slate-400 text-xs mb-0.5">Adresse</p><p className="text-slate-900 font-medium">{org.smeProfile.address ?? '—'}</p></div>
+              <div><p className="text-slate-400 text-xs mb-0.5">Effectif</p><p className="text-slate-900 font-medium">{org.smeProfile.employeeCount ?? '—'}</p></div>
+              <div><p className="text-slate-400 text-xs mb-0.5">CA annuel</p><p className="text-slate-900 font-medium">{org.smeProfile.annualTurnover ? formatMoney(org.smeProfile.annualTurnover, org.smeProfile.currency) : '—'}</p></div>
+            </div>
+
+            {org.smeProfile.beneficialOwners.length > 0 && (
+              <div>
+                <p className="text-slate-500 text-xs font-semibold uppercase tracking-wide mb-2">Bénéficiaires effectifs</p>
+                <div className="divide-y divide-slate-100 border border-slate-100 rounded-lg">
+                  {org.smeProfile.beneficialOwners.map((bo) => (
+                    <div key={bo.id} className="px-3 py-2 flex items-center justify-between text-sm">
+                      <div>
+                        <p className="font-medium text-slate-900">{bo.name}</p>
+                        <p className="text-xs text-slate-400">{bo.role ?? '—'} · {bo.nationality ?? '—'}</p>
+                      </div>
+                      <span className="text-xs font-semibold text-slate-600">{bo.ownershipPct != null ? `${bo.ownershipPct}%` : '—'}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        {/* Consentements */}
+        <div className="bg-white rounded-xl border border-slate-200">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+            <HandCoins size={15} className="text-slate-400" />
+            <h2 className="font-semibold text-slate-900 text-sm">Consentements partenaires</h2>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {org.consentGrants.length === 0 && <p className="px-5 py-4 text-slate-400 text-sm">Aucun</p>}
+            {org.consentGrants.map((cg) => (
+              <div key={cg.id} className="px-5 py-3">
+                <p className="text-sm font-medium text-slate-900">{cg.partnerName}</p>
+                <p className="text-xs text-slate-400">{cg.purpose} · expire le {new Date(cg.expiresAt).toLocaleDateString('fr-FR')}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Budgets */}
+        <div className="bg-white rounded-xl border border-slate-200">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+            <Wallet size={15} className="text-slate-400" />
+            <h2 className="font-semibold text-slate-900 text-sm">Budgets</h2>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {org.budget.length === 0 && <p className="px-5 py-4 text-slate-400 text-sm">Aucun</p>}
+            {org.budget.map((b) => (
+              <div key={b.id} className="px-5 py-3 flex items-center justify-between">
+                <p className="text-sm text-slate-900">{b.category}</p>
+                <p className="text-sm font-semibold text-slate-700">{formatMoney(b.amount, mainCurrency)}<span className="text-slate-400 font-normal">/{b.period.toLowerCase()}</span></p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Règles récurrentes */}
+        <div className="bg-white rounded-xl border border-slate-200">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+            <Repeat size={15} className="text-slate-400" />
+            <h2 className="font-semibold text-slate-900 text-sm">Règles récurrentes</h2>
+          </div>
+          <div className="divide-y divide-slate-100">
+            {org.recurringRules.length === 0 && <p className="px-5 py-4 text-slate-400 text-sm">Aucune</p>}
+            {org.recurringRules.map((r) => (
+              <div key={r.id} className="px-5 py-3 flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-900">{r.name}</p>
+                  <p className="text-xs text-slate-400">{r.frequency}</p>
+                </div>
+                <p className={`text-sm font-semibold ${r.direction === 'IN' ? 'text-green-600' : 'text-red-600'}`}>
+                  {r.direction === 'IN' ? '+' : '-'}{formatMoney(r.amount, mainCurrency)}
+                </p>
               </div>
             ))}
           </div>
