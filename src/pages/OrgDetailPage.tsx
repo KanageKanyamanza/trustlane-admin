@@ -13,6 +13,7 @@ export default function OrgDetailPage() {
   const [suspendOrg, { isLoading: suspending }] = useSuspendOrgMutation()
   const [deleteOrg, { isLoading: deleting }] = useDeleteOrgMutation()
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
 
   if (isLoading) return (
     <div className="p-6 space-y-4">
@@ -22,8 +23,13 @@ export default function OrgDetailPage() {
   if (!org) return <div className="p-6 text-slate-500">Organisation introuvable.</div>
 
   const handleDelete = async () => {
-    await deleteOrg(id!)
-    navigate('/organizations')
+    setDeleteError('')
+    try {
+      await deleteOrg(id!).unwrap()
+      navigate('/organizations')
+    } catch {
+      setDeleteError("Échec de la suppression. Réessayez ou contactez le support si le problème persiste.")
+    }
   }
 
   return (
@@ -84,6 +90,12 @@ export default function OrgDetailPage() {
           )}
         </div>
       </div>
+
+      {deleteError && (
+        <p className="text-red-700 text-sm bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+          {deleteError}
+        </p>
+      )}
 
       {/* KPIs */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
