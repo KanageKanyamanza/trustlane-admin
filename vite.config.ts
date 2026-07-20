@@ -2,11 +2,13 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
-export default defineConfig(({ command }) => ({
-  // Only the production build is reverse-proxied under /admin/ (see UBBFlow's
-  // config/nginx.conf). The dev server must keep serving at the root, or
-  // asset requests 404 into the SPA fallback and fail MIME-type checking.
-  base: command === 'build' ? '/admin/' : '/',
+export default defineConfig(() => ({
+  // Defaults to root: that's what Vercel serves (vercel.json rewrites
+  // everything to /index.html at the domain root). The Docker/Nginx
+  // deployment mounts the panel under /admin/ instead (see UBBFlow's
+  // config/nginx.conf) and opts in via VITE_BASE_PATH at build time
+  // (set in Dockerfile) — never set it for local dev or Vercel.
+  base: process.env.VITE_BASE_PATH || '/',
   plugins: [react()],
   resolve: {
     alias: {

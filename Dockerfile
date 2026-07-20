@@ -8,12 +8,16 @@ RUN corepack enable && pnpm install --frozen-lockfile
 
 COPY . .
 
-# VITE_API_URL is inlined into the JS bundle at build time. Pass it explicitly
-# via --build-arg to point the admin panel at the right backend for this
-# deployment (defaults to a same-origin relative /api, proxied by the outer
-# Nginx to the backend service).
+# VITE_API_URL and VITE_BASE_PATH are inlined into the JS bundle at build time.
+# VITE_API_URL defaults to a same-origin relative /api, proxied by the outer
+# Nginx to the backend service. VITE_BASE_PATH mounts the panel under /admin/
+# to match the Nginx location block (see UBBFlow's config/nginx.conf) — this
+# must stay Docker-only: Vercel serves the panel at its domain root, so
+# vite.config.ts and App.tsx both default to root when this var is unset.
 ARG VITE_API_URL=/api
+ARG VITE_BASE_PATH=/admin/
 ENV VITE_API_URL=${VITE_API_URL}
+ENV VITE_BASE_PATH=${VITE_BASE_PATH}
 
 RUN pnpm run build
 
