@@ -17,7 +17,7 @@ import AdminsPage from './pages/AdminsPage'
 
 export default function App() {
   return (
-    <BrowserRouter basename="/admin">
+    <BrowserRouter basename={import.meta.env.PROD ? '/admin' : '/'}>
       <AdminAuthProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
