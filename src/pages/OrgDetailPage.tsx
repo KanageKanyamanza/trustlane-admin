@@ -165,7 +165,7 @@ export default function OrgDetailPage() {
           </div>
           <span className="text-slate-400 text-xs">{org._count.transactions} au total</span>
         </div>
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-slate-100 max-h-[520px] overflow-y-auto">
           {txnsLoading && <p className="px-5 py-4 text-slate-400 text-sm">Chargement...</p>}
           {!txnsLoading && txns?.data.length === 0 && (
             <p className="px-5 py-4 text-slate-400 text-sm">Aucune transaction</p>
